@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bikepacking OS</title>
+
+  <!-- REAL PWA MANIFEST (create manifest.json in same folder) -->
+  <link rel="manifest" href="manifest.json" />
+
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Arial;
+      background:#0b1220;
+      color:#e2e8f0;
+      margin:0;
+      padding:14px;
+    }
+
+    h1 { font-size:20px; margin:10px 0 14px; }
+
+    .topbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+
+    button {
+      background:#334155;
+      color:#e2e8f0;
+      border:none;
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:13px;
+    }
+
+    .summary {
+      background:#0f172a;
+      padding:10px;
+      border-radius:12px;
+      margin-bottom:10px;
+    }
+
+    input[type=number], input[type=text]{
+      width:120px;
+      background:#0f172a;
+      color:#e2e8f0;
+      border:1px solid #334155;
+      border-radius:8px;
+      padding:6px;
+    }
+
+    .bar { height:10px; background:#334155; border-radius:6px; overflow:hidden; margin-top:6px; }
+    .fill { height:10px; background:#38bdf8; }
+
+    .coach {
+      background:#0f172a;
+      padding:10px;
+      border-radius:12px;
+      margin:10px 0;
+      border:1px solid #334155;
+      font-size:13px;
+      white-space:pre-line;
+    }
+
+    .tabs { display:flex; gap:6px; overflow-x:auto; margin:10px 0; }
+
+    .tab {
+      flex:0 0 auto;
+      padding:8px 10px;
+      border-radius:10px;
+      background:#1e293b;
+      font-size:12px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .tab.active {
+      background:#334155;
+      border:1px solid #60a5fa;
+    }
+
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    .card {
+      background:#1e293b;
+      padding:12px;
+      border-radius:12px;
+      margin-bottom:10px;
+    }
+
+    h2 { font-size:14px; margin:0 0 8px; }
+
+    ul { list-style:none; padding:0; margin:0; }
+
+    li {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      padding:6px 0;
+      font-size:13px;
+    }
+
+    input[type=checkbox]{ transform:scale(1.1); }
+
+    .alert {
+      background:#7f1d1d;
+      padding:8px;
+      border-radius:10px;
+      margin:8px 0;
+      font-size:12px;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🚴 Bikepacking OS (PWA Ready)</h1>
+
+<div class="topbar">
+  <button onclick="toggleUnit()">Toggle kg/lb</button>
+  <button onclick="autoPlan()">Auto Pack</button>
+  <button onclick="packOrder()">Pack Order</button>
+</div>
+
+<div class="summary">
+  Destination <input id="dest" value="Blue Ridge Parkway" />
+  Distance km <input id="dist" type="number" value="750" />
+</div>
+
+<div class="summary">
+  Trip Days: <span id="days">0</span>
+</div>
+
+<div class="summary">
+  Total Load: <span id="total">0</span> g (<span id="totalConv">0</span>)
+  <div class="bar"><div id="fill" class="fill"></div></div>
+</div>
+
+<div id="alert" class="alert"></div>
+
+<div class="coach">
+🧠 Coach
+<div id="coachText">Ready</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">Sleep</div>
+  <div class="tab" onclick="showTab(1)">Clothing</div>
+  <div class="tab" onclick="showTab(2)">Repair</div>
+  <div class="tab" onclick="showTab(3)">Food</div>
+  <div class="tab" onclick="showTab(4)">Hygiene</div>
+</div>
+
+<div class="panel active">
+  <div class="card">
+    <h2>Sleep System</h2>
+    <ul>
+      <li><span><input type="checkbox" onchange="calc()"> Sleeping bag</span><input type="number" value="450"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Sleeping pad</span><input type="number" value="300"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Tent / shelter</span><input type="number" value="900"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Groundsheet</span><input type="number" value="250"></li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="card"><h2>Clothing</h2>
+    <ul>
+      <li><span><input type="checkbox" onchange="calc()"> Base layer</span><input type="number" value="500"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Warm layer</span><input type="number" value="600"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Rain jacket</span><input type="number" value="350"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Socks</span><input type="number" value="200"></li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="card"><h2>Repair</h2>
+    <ul>
+      <li><span><input type="checkbox" onchange="calc()"> Multi-tool</span><input type="number" value="200"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Tubes</span><input type="number" value="300"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Tire kit</span><input type="number" value="150"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Chain lube</span><input type="number" value="120"></li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="card"><h2>Food</h2>
+    <ul>
+      <li><span><input type="checkbox" onchange="calc()"> Snacks</span><input type="number" value="300"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Food stash</span><input type="number" value="600"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Electrolytes</span><input type="number" value="120"></li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="card"><h2>Hygiene</h2>
+    <ul>
+      <li><span><input type="checkbox" onchange="calc()"> Toothbrush</span><input type="number" value="80"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Wet wipes</span><input type="number" value="120"></li>
+      <li><span><input type="checkbox" onchange="calc()"> Hygiene kit</span><input type="number" value="150"></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+let unit='g';
+
+function toggleUnit(){unit=unit==='g'?'lb':'g';calc();}
+function gToLb(g){return (g*0.00220462).toFixed(2);}
+
+function showTab(i){
+  document.querySelectorAll('.panel').forEach((p,idx)=>p.classList.toggle('active',idx===i));
+  document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+}
+
+function calc(){
+  let total=0;
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    let li=cb.closest('li');
+    let val=parseInt(li.querySelector('input[type=number]').value||0);
+    if(cb.checked) total+=val;
+  });
+
+  document.getElementById('total').innerText=total;
+  document.getElementById('totalConv').innerText=unit==='g'?total+' g':gToLb(total)+' lb';
+
+  let days=Math.ceil((parseInt(document.getElementById('dist').value||0))/80);
+  document.getElementById('days').innerText=days;
+
+  document.getElementById('fill').style.width=Math.min(total/8000*100,100)+'%';
+
+  let warn='';
+  if(total>8500) warn+='Overpack risk. ';
+  document.getElementById('alert').style.display=warn?"block":"none";
+  document.getElementById('alert').innerText=warn;
+}
+
+function autoPlan(){
+  document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true);
+  calc();
+}
+
+function packOrder(){
+  alert("Sleep → front\nClothing → seat\nRepair → frame\nFood → frame center\nHygiene → cockpit");
+}
+
+calc();
+</script>
+
+<!-- =======================
+PWA FILES YOU MUST CREATE
+=======================
+
+1) manifest.json
+{
+  "name": "Bikepacking OS",
+  "short_name": "BikeOS",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": []
+}
+
+2) sw.js (offline cache)
+const CACHE_NAME = "bikeos-v1";
+const ASSETS = ["./"];
+
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+});
+
+self.addEventListener("fetch", e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+
+3) Add this line before </body>:
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+======================= -->
+
+</body>
+</html>
